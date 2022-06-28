@@ -53,7 +53,9 @@ module emu
 	output        VGA_F1,
 	output [1:0]  VGA_SL,
 	output        VGA_SCALER, // Force VGA scaler
-	output        VGA_DISABLE, // analog out is off
+	output        VGA_DISABLE, // analog out is of
+
+	output        REGO,
 
 	input  [11:0] HDMI_WIDTH,
 	input  [11:0] HDMI_HEIGHT,
@@ -182,6 +184,8 @@ assign {UART_RTS, UART_TXD, UART_DTR} = 0;
 
 assign AUDIO_S   = 1;
 assign AUDIO_MIX = status[8:7];
+
+assign REGO = status[12];
 
 assign LED_USER  = exe_download | bk_pending;
 assign LED_DISK  = 0;
@@ -341,7 +345,7 @@ wire reset_or = RESET | buttons[1] | status[0] | bios_download | exe_download | 
 // 0         1         2         3          4         5         6            7         8         9
 // 01234567890123456789012345678901 23456789012345678901234567890123 45678901234567890123456789012345
 // 0123456789ABCDEFGHIJKLMNOPQRSTUV 0123456789ABCDEFGHIJKLMNOPQRSTUV 0123456789ABCDEFGHIJKLMNOPQRSTUV
-//  X XXXXXXXXX XXXXXXXXXXXX XXXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXX XX XXX
+//  X XXXXXXXXXxXXXXXXXXXXXX XXXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXX XX XXX
 
 `include "build_id.v"
 parameter CONF_STR = {
@@ -401,6 +405,7 @@ parameter CONF_STR = {
 	"P2-;",
 	"P2O[16],Fastboot,Off,On;",
 	"P2O[42],CD Lid,Closed,Open;",
+        "OC,Rego,off,on;",
 	"P2-;",
 	"P2-,(U) = unsafe -> can crash;",
 	"P2O[21],CD Fast Seek,Off,On(U);",

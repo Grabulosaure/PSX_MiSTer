@@ -682,7 +682,6 @@ ascal
 	.o_de     (hdmi_de),
 	.o_vbl    (hdmi_vbl),
 	.o_brd    (hdmi_brd),
-	.o_lltune (lltune),
 	.htotal   (WIDTH + HFP + HBP + HS[11:0]),
 	.hsstart  (WIDTH + HFP),
 	.hsend    (WIDTH + HFP + HS[11:0]),
@@ -718,6 +717,9 @@ ascal
 	`endif
 `endif
 
+	.lltune   (lltune),
+	.o_resync (resync),
+ 
 	.o_fb_ena         (FB_EN),
 	.o_fb_hsize       (FB_WIDTH),
 	.o_fb_vsize       (FB_HEIGHT),
@@ -901,13 +903,17 @@ end
 
 `ifndef MISTER_DEBUG_NOHDMI
 wire [15:0] lltune;
+wire resync,rego;
+
 pll_hdmi_adj pll_hdmi_adj
 (
 	.clk(FPGA_CLK1_50),
 	.reset_na(~reset_req),
 
 	.llena(lowlat),
-	.lltune({16{hdmi_config_done | cfg_dis}} & lltune),
+	.lltune(lltune),
+	.resync(resync),
+ 	.rego(rego),
 	.locked(led_locked),
 	.i_waitrequest(adj_waitrequest),
 	.i_write(adj_write),
@@ -1566,6 +1572,7 @@ emu emu
 	.VGA_F1(f1),
 	.VGA_SCALER(vga_force_scaler),
 	.VGA_DISABLE(VGA_DISABLE),
+ 	.REGO(rego),
 
 	.HDMI_WIDTH(direct_video ? 12'd0 : hdmi_width),
 	.HDMI_HEIGHT(direct_video ? 12'd0 : hdmi_height),

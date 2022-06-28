@@ -186,7 +186,8 @@ ENTITY ascal IS
     
     ------------------------------------
     -- Low lag PLL tuning
-    o_lltune : OUT unsigned(15 DOWNTO 0);
+    lltune   : OUT unsigned(15 DOWNTO 0);
+    o_resync : IN std_logic;
     
     ------------------------------------
     -- Input video parameters
@@ -492,7 +493,7 @@ ARCHITECTURE rtl OF ascal IS
   SIGNAL o_vpix_inner : arr_pix(0 TO 6);
 
 
-  SIGNAL o_vpe : std_logic;
+  SIGNAL o_vpe,o_clr : std_logic;
   SIGNAL o_div : arr_div(0 TO 2); --uint12;
   SIGNAL o_dir : arr_frac(0 TO 2);
   ATTRIBUTE ramstyle OF o_div, o_dir : SIGNAL IS "logic"; -- avoid blockram shift register
@@ -2635,18 +2636,25 @@ BEGIN
     IF rising_edge(o_clk) THEN
       IF o_ce='1' THEN
         -- Output pixels count
+        o_clr<='0';
+        
         IF o_hcpt+1<o_htotal THEN
           o_hcpt<=(o_hcpt+1) MOD 4096;
         ELSE
           o_hcpt<=0;
           IF o_vcpt_pre3+1>=o_vtotal THEN
             o_vcpt_pre3<=0;
+            o_clr<='1';
           ELSE
             o_vcpt_pre3<=(o_vcpt_pre3+1) MOD 4096;
           END IF;
           o_vcpt_pre2<=o_vcpt_pre3;
           o_vcpt_pre<=o_vcpt_pre2;
           o_vcpt<=o_vcpt_pre;
+        END IF;
+        IF o_resync='1' THEN
+          o_vcpt_pre3<=0;
+          o_hcpt<=0;
         END IF;
         
         o_end(0)<=to_std_logic(o_vcpt>=o_vdisp);
@@ -2863,15 +2871,18 @@ BEGIN
   
   -----------------------------------------------------------------------------
   -- Low Lag syntoniser interface
-  o_lltune<=(0 => i_vss,
-             1 => i_pde,
-             2 => i_inter,
-             3 => i_flm,
-             4 => o_vss,
-             5 => i_pce,
-             6 => i_clk,
-             7 => o_clk,
-             OTHERS =>'0');
-  
+  lltune <= (
+    0  => i_clk,
+    1  => i_ce,
+    2  => i_de_pre,
+    3  => i_vss,
+    4  => i_inter,
+    5  => i_fl,
+    8  => o_clk,
+    9  => o_ce,
+    10 => o_vss,
+    11 => o_clr,
+    OTHERS => '0');
+   
   ----------------------------------------------------------------------------  
 END ARCHITECTURE rtl;
